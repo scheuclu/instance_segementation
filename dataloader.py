@@ -6,16 +6,17 @@ import numpy as np
 
 #import matplotlib.pyplot as plt
 #%matplotlib inline
+from torch.utils.data import Dataset
 
-class DataLoader(object):
+class MyDataset(Dataset):
     def __init__(self,image_dir, classes_dir, segvecs_dir):
         self.image_dir = image_dir
         self.classes_dir = classes_dir
         self.segvecs_dir = segvecs_dir
         classes_candidates = [name.replace('.xml', '') for name in os.listdir(classes_dir)]
-        print("classes_candidates", len(classes_candidates))
+        ###print("classes_candidates", len(classes_candidates))
         segvecs_candidates = set([name.replace('.png', '') for name in os.listdir(segvecs_dir)])
-        print("segvecs_candidates", len(segvecs_candidates))
+        ###print("segvecs_candidates", len(segvecs_candidates))
         self.idx_list = [idx for idx in classes_candidates if idx in segvecs_candidates]
 
 
@@ -39,9 +40,13 @@ class DataLoader(object):
 
         img = cv2.imread(os.path.join(self.segvecs_dir, idx + '.png'))
         img = img.sum(axis=-1)
-        img = img / img.max()
+        ###print("max:", img.max(), ' min:', img.min())
+        img= img!=0.0
+        img = img.astype(np.float32)
+        ###print("Image maxuimum:", img.max())
+        #img = img / img.max()
         classmap = img
-        print("img.shape", img.shape)
+        ###print("img.shape", img.shape)
         ###background = img == 0.0
         ###background = background.astype(np.float32).sum(axis=-1)#[:,:,None]
         ###print("background.shape", background.shape)
@@ -57,12 +62,13 @@ class DataLoader(object):
         vectormap = vectormap[:1184, :,:]
         vectormap = vectormap.transpose((2, 1, 0))
 
-        print("classmap.shape", classmap.shape)
-        print("vectormap.shape", vectormap.shape)
+        ###print("classmap.shape", classmap.shape)
+        ###print("vectormap.shape", vectormap.shape)
         return (classmap, vectormap)
 
 
     def __getitem__(self, item):
+        #print("Item:", item)
         x = self.get_image(item)
         y = self.get_label(item)
         return x, y
