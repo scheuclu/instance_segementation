@@ -4,21 +4,22 @@ import xmltodict
 import cv2
 import numpy as np
 
-#import matplotlib.pyplot as plt
-#%matplotlib inline
 from torch.utils.data import Dataset
 
+
 class MyDataset(Dataset):
-    def __init__(self,image_dir, classes_dir, segvecs_dir):
+    def __init__(self, phase, image_dir, classes_dir, segvecs_dir):
         self.image_dir = image_dir
         self.classes_dir = classes_dir
         self.segvecs_dir = segvecs_dir
         classes_candidates = [name.replace('.xml', '') for name in os.listdir(classes_dir)]
-        ###print("classes_candidates", len(classes_candidates))
         segvecs_candidates = set([name.replace('.png', '') for name in os.listdir(segvecs_dir)])
-        ###print("segvecs_candidates", len(segvecs_candidates))
-        self.idx_list = [idx for idx in classes_candidates if idx in segvecs_candidates]
+        idx_list = [idx for idx in classes_candidates if idx in segvecs_candidates]
 
+        if phase=='train':
+            self.idx_list = idx_list[:int(len(idx_list) * 0.8)]
+        else:
+            self.idx_list = idx_list[int(len(idx_list) * 0.8):]
 
     def __len__(self):
         return len(self.idx_list)
@@ -31,40 +32,31 @@ class MyDataset(Dataset):
         return x
 
     def get_label(self,item):
-        classmap = np.zeros((1208, 1920, 2), dtype=np.float32)
-        vectormap = np.zeros((1208, 1920, 2), dtype=np.float32)
-        idx = self.idx_list[item]
+        try:
+            classmap = np.zeros((1208, 1920, 2), dtype=np.float32)
+            vectormap = np.zeros((1208, 1920, 2), dtype=np.float32)
+            idx = self.idx_list[item]
 
-        #print(x.shape)
-        #assert(1==2)
+            img = cv2.imread(os.path.join(self.segvecs_dir, idx + '.png'))
+            img = img.sum(axis=-1)
+            ###print("max:", img.max(), ' min:', img.min())
+            img= img!=0.0
+            img = img.astype(np.float32)
+            ###print("Image maxuimum:", img.max())
+            #img = img / img.max()
+            classmap = img
 
-        img = cv2.imread(os.path.join(self.segvecs_dir, idx + '.png'))
-        img = img.sum(axis=-1)
-        ###print("max:", img.max(), ' min:', img.min())
-        img= img!=0.0
-        img = img.astype(np.float32)
-        ###print("Image maxuimum:", img.max())
-        #img = img / img.max()
-        classmap = img
-        ###print("img.shape", img.shape)
-        ###background = img == 0.0
-        ###background = background.astype(np.float32).sum(axis=-1)#[:,:,None]
-        ###print("background.shape", background.shape)
-        ###print("classmap[:,:,0].shape", classmap[:,:,0].shape)
-        ###classmap[:,:,0] = background
-        ###classmap[:, :, 1] = 1 - background
+            vectormap[:, :, 0] = cv2.imread(os.path.join(self.segvecs_dir, idx + '_w.png')).sum(axis=-1)/255
+            vectormap[:, :, 1] = cv2.imread(os.path.join(self.segvecs_dir, idx + '_h.png')).sum(axis=-1) / 255
 
-        vectormap[:, :, 0] = cv2.imread(os.path.join(self.segvecs_dir, idx + '_w.png')).sum(axis=-1)/255
-        vectormap[:, :, 1] = cv2.imread(os.path.join(self.segvecs_dir, idx + '_h.png')).sum(axis=-1) / 255
-
-        classmap = classmap[:1184, :]
-        classmap = classmap.transpose((1, 0))
-        vectormap = vectormap[:1184, :,:]
-        vectormap = vectormap.transpose((2, 1, 0))
-
-        ###print("classmap.shape", classmap.shape)
-        ###print("vectormap.shape", vectormap.shape)
-        return (classmap, vectormap)
+            classmap = classmap[:1184, :]
+            classmap = classmap.transpose((1, 0))
+            vectormap = vectormap[:1184, :,:]
+            vectormap = vectormap.transpose((2, 1, 0))
+            return (classmap, vectormap)
+        except:
+            print("Encountered a problem with item:",item," idx", self.idx_list[item])
+            return self.get_label((item+1)%self.__len__())
 
 
     def __getitem__(self, item):

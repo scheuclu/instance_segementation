@@ -108,6 +108,7 @@ def chunks(l, n):
         yield l[i:i + n]
 fulllist = list(datagetter.idxs)
 arg_instances = list(chunks(fulllist, int(len(fulllist)/60)))
+
 #print(len(arg_instances))
 #assert(1==2)
 
@@ -126,6 +127,7 @@ def process_list(idx_list):
                    fname='/raid/group-data/uc150429/AID_DATA_201905/batch-123/center_vectors/' + idx + '_h.png', cmap = plt.cm.gray)
         plt.imshow(vectorfield[:,:,0])
         plt.show()
+
         print("aaa")
 
         #np.save(file='/raid/group-data/uc150429/AID_DATA_201905/batch-123/center_vectors/'+idx+'.npy',

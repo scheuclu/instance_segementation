@@ -1,16 +1,7 @@
-
 import torch
-from tqdm import tqdm
-#from configs import classnames, index2name
-
-
-
-
+import itertools as it
 
 def run_epoch(params, phase, num_batches, model, optimizer, scheduler, dataloader, device):
-
-        #class_to_idx = dataloader.dataset.class_to_idx
-        #idx_to_class = {val: key for key, val in class_to_idx.items()}
 
         print(phase.upper())
         if phase == 'train':
@@ -20,30 +11,15 @@ def run_epoch(params, phase, num_batches, model, optimizer, scheduler, dataloade
             model.eval()  # Set model to evaluate mode
 
         running_loss = 0.0
-        ###running_corrects = 0.0
-        ###running_wrongs = 0.0
-
-        ###running_class_stats = {classname: {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0, 'num_preds': 0, 'num_gt': 0} for classname in
-        ###                       dataloader.dataset.classes}
-
-        ###running_class_corrects = {i: 0 for i in range(5)}
-        ###running_class_wrongs = {i: 0 for i in range(5)}
 
         # Iterate over data once.
         batchidx = 0
-        for x, y in tqdm(dataloader):
+        for i, (x, y) in zip(it.count(num_batches),dataloader):
+            print(i,end=' ')
             batchidx += 1
             if batchidx > num_batches:
                 print(" ")
                 break
-            """
-            In[4]: x.shape
-            Out[4]: torch.Size([10, 3, 1920, 1184])
-            In[7]: y[0].shape
-            Out[7]: torch.Size([10, 1920, 1184])
-            y[1].shape
-            Out[9]: torch.Size([10, 2, 1920, 1184])
-            """
 
             y_classmap, y_vectormap = y
             X = torch.Tensor(x.type(torch.float))
@@ -54,8 +30,6 @@ def run_epoch(params, phase, num_batches, model, optimizer, scheduler, dataloade
             Y_class = Y_class.to(device)
             Y_vector = Y_vector.to(device)
             X = X.to(device)
-
-
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -82,7 +56,6 @@ def run_epoch(params, phase, num_batches, model, optimizer, scheduler, dataloade
                 vector_loss = vector_loss_fn(pred_class_vectors, Y_vector)
 
                 total_loss = cross_entropy_loss + vector_loss
-                #print(total_loss.item())#TODO
 
                 # backward + optimize only if in training phase
                 if phase == 'train':
