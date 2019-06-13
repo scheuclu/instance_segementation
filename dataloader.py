@@ -72,13 +72,14 @@ if __name__ == '__main__':
     segvecs_dir = '/raid/group-data/uc150429/AID_DATA_201905/batch-123/center_vectors/'
     classes_dir = '/raid/group-data/uc150429/AID_DATA_201905/batch-123/pixelwise_annotation_xml'
 
-    dataloader = DataLoader(image_dir = image_dir, classes_dir = classes_dir, segvecs_dir = segvecs_dir)
+    dataloader = MyDataset(image_dir = image_dir, classes_dir = classes_dir, segvecs_dir = segvecs_dir)
     x, (classmap, vectormap) = dataloader[0]
+    import matplotlib.pyplot as plt
     plt.figure(); plt.imshow(classmap[:,:,0])
     plt.figure(); plt.imshow(classmap[:,:,1])
     plt.figure(); plt.imshow(vectormap[:,:,0])
     plt.figure(); plt.imshow(vectormap[:,:,1])
     plt.show()
 
-    print(classmap.shape)
-    print(vectormap.shape)
+    print("classmap.shape", classmap.shape)
+    print("vectormap.shape", vectormap.shape)

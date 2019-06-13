@@ -1,3 +1,9 @@
+""" Ptotting module.
+
+Plotting module.
+
+"""
+
 from visdom import Visdom
 import numpy as np
 #from configs import index2name, name2index
@@ -14,12 +20,12 @@ class VisdomLinePlotter(object):
         self.plot_path = plot_path
         #self.viz.log_to_filename = log_filename
 
-    def plot(self, var_name, split_name, title_name, x, y):
+    def plot(self, var_name, split_name, title_name, x, y, xlabel='Epochs'):
         if var_name not in self.plots:
             self.plots[var_name] = self.viz.line(X=np.array([x,x]), Y=np.array([y,y]), env=self.env, opts=dict(
                 legend=[split_name],
                 title=title_name,
-                xlabel='Epochs',
+                xlabel=xlabel,
                 ylabel=var_name
             ))
         else:
@@ -37,7 +43,7 @@ class VisdomLinePlotter(object):
             plot(plotlyfig, filename=os.path.join(self.plot_path,windowcontent['title']+'.html'), auto_open=False)
 
 
-
+#TODO deprecated
 def plot_epoch_end(plotter, phase, epoch, epoch_acc, epoch_loss, lr, running_class_stats):
     """ Plot statistics to visdom """
     plotter.plot('acc', phase, 'acc', epoch, epoch_acc)

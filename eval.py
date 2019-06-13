@@ -1,15 +1,27 @@
+""" Evaluation module.
+
+Checkpoint evaluation module.
+
+Currently, no real metrics are calculated yet.
+Instead, for every eval image, the following comparisons are created:
+ - ground-truth class vs predicted class
+ - ground-truth x-distance vs predicted x-distance
+ - ground-truth y-distance vs predicted y-distance
+
+TODO:
+    * Find a way to identify object instances from the predictions
+
+"""
+
 import os
 import torch
 import segmentation_models_pytorch as smp
+import matplotlib.pyplot as plt
 
 from dataloader import MyDataset
 
-import matplotlib.pyplot as plt
 
-
-
-
-checkpoint = '/raid/user-data/lscheucher/tmp/my_instance_segmentation/checkpoints/18my_instance_segmentation_SGD.pth'
+checkpoint = '/raid/user-data/lscheucher/tmp/my_instance_segmentation/checkpoints/350my_instance_segmentation_SGD.pth'
 
 
 parent_dir = checkpoint.rsplit('/', maxsplit=1)[0]
@@ -23,9 +35,7 @@ image_dir = '/raid/group-data/uc150429/AID_DATA_201905/batch-123/original_image/
 segvecs_dir = '/raid/group-data/uc150429/AID_DATA_201905/batch-123/center_vectors/'
 classes_dir = '/raid/group-data/uc150429/AID_DATA_201905/batch-123/pixelwise_annotation_xml'
 
-
 dataset_eval = MyDataset(phase='val', image_dir = image_dir, classes_dir = classes_dir, segvecs_dir = segvecs_dir)
-
 
 sampler = None
 eval_loader = torch.utils.data.DataLoader(
@@ -37,7 +47,7 @@ model = smp.Unet('resnet34', classes=4)
 model.load_state_dict(torch.load(checkpoint))
 model.eval()
 
-
+# Loop over evaluation images
 for i, (x,y) in zip(range(10), eval_loader):
     y_classmap, y_vectormap = y
     X = torch.Tensor(x.type(torch.float))
@@ -46,6 +56,7 @@ for i, (x,y) in zip(range(10), eval_loader):
 
     result = model.forward(X)
 
+    # Loop over images in batch
     for batch_index in range(result.shape[0]):
         fig = plt.figure()
         fig.set_size_inches(20, 20)

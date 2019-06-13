@@ -13,6 +13,7 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 
 import os
+import time
 
 """Parameters"""
 params = edict({'batch_size':3,
@@ -20,9 +21,9 @@ params = edict({'batch_size':3,
                 'height': 1184,
                 'numclasses': 2,
                 'num_epochs': 1000,
-                'steps_per_epoch': 200,
-                'optimizer': 'Adam',
-                'train_identifier': 'my_instance_segmentation_Adam'})
+                'steps_per_epoch': 20,
+                'optimizer': 'SGD',
+                'train_identifier': 'DEBUG'})
 
 device = 'cuda:0'
 
@@ -79,7 +80,7 @@ dataloader = {'train':train_loader, 'val': val_loader}
 print("Created train loader")
 
 
-if params.optimizer == 'SGD:
+if params.optimizer == 'SGD':
     optimizer = optim.SGD(
         model.parameters(),
         lr=0.1,
@@ -97,6 +98,7 @@ scheduler = lr_scheduler.StepLR(
     step_size=20,
     gamma=0.5)
 
+time_train_start = time.time()
 for epoch in range(params.num_epochs):
     for phase in ['train', 'val']:
         epoch_loss = run_epoch(
@@ -109,11 +111,23 @@ for epoch in range(params.num_epochs):
             dataloader=dataloader[phase],
             device=device)
 
-        plotter.plot(var_name='loss',
+        dates = time.localtime()
+        datestring = "-".join([str(dates.tm_year), str(dates.tm_mon), str(dates.tm_mday)])
+        timestring = ":".join([str(dates.tm_hour), str(dates.tm_min), str(dates.tm_min)])
+
+        plotter.plot(var_name='loss over epoch',
                      split_name=phase,
-                     title_name='title: loss',
+                     title_name='loss over epoch',
                      x=epoch,
                      y=epoch_loss)
+
+        min_since_train_start = round((time.time() - time_train_start) / 60,1)
+        plotter.plot(var_name='loss over time',
+                     split_name=phase,
+                     title_name='loss over time',
+                     x=min_since_train_start,
+                     y=epoch_loss
+                     xlabel = 'Minutes')
 
         # save the model
         if phase == 'val':# and epoch_acc > best_acc:
