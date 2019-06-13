@@ -10,8 +10,16 @@ I used Unet with Resnet134.
 for an input with shape `(batched, height, width, 3)` the output shape is `(batchen, height, width, numclasses+2)`.
 So, the first `numclasses` output channels define the class prediction per pixel. Note that background is also a class.
 
+### Currently
+The first of the last two components is the absolute distance to the left-most or right-most pixel of that instance (whichever one is smaller).
+The second of the last two components is the absolute distance to the upper-most or lower-most pixel of that instance (whichever one is smaller).
+
+For each instance, those vectors are additionally sclaled, such that the obejct center has always magnitude 1.0.
+
+### Planned
 The last 2 components are the x and y component of that pixel to the nearest object boundary.
 For each instance, those vectors are additionally sclaled, such that the obejct center has always magnitude 1.0.
+
 
 ## Results so far
 
